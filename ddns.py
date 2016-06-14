@@ -68,7 +68,7 @@ def update_handler():
         myip = request.args['myip']
     except KeyError:
         return "badparam"
-    if config.users.get(username, '') != password:
+    if not username in config.users or config.users[username] != password:
         return "badauth"
 
     # FQDN
