@@ -90,3 +90,6 @@ ENV/
 
 # default location for gcloud service account key
 /key.json
+
+# config file
+/config.py
