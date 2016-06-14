@@ -12,6 +12,12 @@ and zone name. Then
     $ pip install -r requirements.txt
     $ ./ddns
 
+Use WSGI for production.
+
+## Usage
+
+    GET /update?username=alice&password=foo&hostname=example.com&myip=192.0.2.1
+
 ## License
 
 MIT
