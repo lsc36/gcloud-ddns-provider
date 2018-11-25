@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import ipaddress
 import time
 
 from flask import Flask
@@ -18,6 +19,17 @@ def list_all(method, *args, **kwargs):
 
 
 def dns_update(hostname, ip):
+    # determine record type
+    try:
+        ipaddress.IPv4Address(ip)
+        record_type = 'A'
+    except ipaddress.AddressValueError:
+        try:
+            ipaddress.IPv6Address(ip)
+            record_type = 'AAAA'
+        except ipaddress.AddressValueError:
+            return 'badparam'
+
     # retrieve zone and records
     client = dns.Client.from_service_account_json(
         config.gcloud_key,
@@ -33,7 +45,7 @@ def dns_update(hostname, ip):
         # find A records of hostname if exists, delete if outdated, return if IP
         # not changed
         rrs_old = [rrs for rrs in rrss
-            if (rrs.name, rrs.record_type) == (hostname, 'A')][0]
+            if (rrs.name, rrs.record_type) == (hostname, record_type)][0]
         if rrs_old.rrdatas[0] == ip:
             return "nochg"
         changes.delete_record_set(rrs_old)
@@ -41,7 +53,7 @@ def dns_update(hostname, ip):
         pass
     # new record with TTL = 1
     changes.add_record_set(zone.resource_record_set(
-        hostname, 'A', 1, [ip],
+        hostname, record_type, 1, [ip],
     ))
 
     # fire request, wait until done (60s timeout, poll every 5s)
